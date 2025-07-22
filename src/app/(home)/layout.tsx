@@ -1,3 +1,4 @@
+import HomeLayout from "@/modules/home/ui/layouts/home-layout";
 import React from "react";
 
 interface LayoutProps {
@@ -6,10 +7,9 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <div>
-      <div>layout</div>
+    <HomeLayout>
       <div>{children}</div>
-    </div>
+    </HomeLayout>
   );
 };
 
