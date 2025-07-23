@@ -12,11 +12,9 @@ export const HomeNavbar = () => {
         <div className="flex items-center flex-shrink-0">
           <SidebarTrigger />
           <Link href={"/"}>
-            <div className="p-4 flex items-center gap-1">
+            <div className="px-4 py-2 flex items-center gap-1">
               <Image src={"/logo.svg"} alt="Logo" width={32} height={32} />
-              <div className="text-xl font-semibold tracking-tight">
-                YouTube
-              </div>
+              <div className="text-xl font-semibold tracking-tight">UTube</div>
             </div>
           </Link>
         </div>

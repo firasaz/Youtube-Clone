@@ -3,45 +3,43 @@
 import {
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { FlameIcon, HomeIcon, PlaySquareIcon } from "lucide-react";
+import { ListVideoIcon, HistoryIcon, ThumbsUpIcon } from "lucide-react";
 import Link from "next/link";
 import { useAuth, useClerk } from "@clerk/nextjs";
 
 const items = [
   {
-    title: "Home",
-    url: "/",
-    icon: HomeIcon,
-  },
-  {
-    title: "Subscriptions",
-    url: "/feed/subscriptions",
-    icon: PlaySquareIcon,
+    title: "History",
+    url: "/playlists/history",
+    icon: HistoryIcon,
     auth: true,
   },
   {
-    title: "Trending",
-    url: "/feed/trending",
-    icon: FlameIcon,
+    title: "Liked videos",
+    url: "/playlists/liked",
+    icon: ThumbsUpIcon,
+    auth: true,
+  },
+  {
+    title: "All playlists",
+    url: "/playlists",
+    icon: ListVideoIcon,
+    auth: true,
   },
 ];
 
-export const MainSection = () => {
+export const PersonalSection = () => {
   const clerk = useClerk();
   const { isSignedIn } = useAuth();
 
-  // const handleSignIn = (e) => {
-  //   e.preventDefault();
-  //   if(!isSignedIn) {
-  //     return clerk.openSignIn();
-  //   }
-  // }
   return (
     <SidebarGroup>
+      <SidebarGroupLabel>You</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => (
