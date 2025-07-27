@@ -1,0 +1,25 @@
+{
+  "name": "Youtube-Clone-Bun-Dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "forwardPorts": [3000],
+  "postCreateCommand": "bun install", // run this command automatically after the container is created
+  "postStartCommand": "bun dev", // run this command automatically after the container is created
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "wesbos.theme-cobalt2",
+        "teabyii.ayu",
+        "bradlc.vscode-tailwindcss",
+        "formulahendry.auto-rename-tag"
+      ]
+    }
+  }
+}
