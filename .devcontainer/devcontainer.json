@@ -4,9 +4,8 @@
     "dockerfile": "Dockerfile",
     "context": ".."
   },
-  "forwardPorts": [3000],
   "postCreateCommand": "bun install", // run this command automatically after the container is created
-  "postStartCommand": "bun dev", // run this command automatically after the container is created
+  "postStartCommand": "bun dev", // run this command automatically after the container is started
   "customizations": {
     "vscode": {
       "settings": {

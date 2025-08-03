@@ -11,7 +11,7 @@ RUN apt-get update && \
 
 # COPY . .
 
-EXPOSE 3000
+# EXPOSE 3000
 
 # Use bash as entrypoint so we land in a terminal
 CMD ["bash"]
