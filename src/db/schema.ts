@@ -1,4 +1,5 @@
 import {
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -20,3 +21,11 @@ export const users = pgTable(
   },
   (t) => [uniqueIndex("clerk_id_idx").on(t.clerkId)]
 );
+
+export const serviceLogs = pgTable("services_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  service_name: text("service_name").notNull(),
+  request_body: jsonb("request_body"),
+  response_body: jsonb("response_body").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

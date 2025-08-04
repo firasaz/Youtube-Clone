@@ -2,7 +2,7 @@ import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { serviceLogs, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function POST(req: Request) {
@@ -33,6 +33,8 @@ export async function POST(req: Request) {
   const body = JSON.stringify(payload);
 
   let evt: WebhookEvent;
+  let statusCode = 200;
+  let responseBody = { message: "Webhook received" };
 
   // Verify payload with headers
   try {
@@ -43,13 +45,22 @@ export async function POST(req: Request) {
     }) as WebhookEvent;
   } catch (err) {
     console.error("Error: Could not verify webhook:", err);
-    return new Response("Error: Verification error", { status: 400 });
+    statusCode = 400;
+    responseBody = { message: "Verification error. Could not verify webhook." };
+    // log error into db
+    await db.insert(serviceLogs).values({
+      service_name: "clerk",
+      request_body: payload,
+      response_body: responseBody,
+    });
+
+    return new Response("Error: Verification error", { status: statusCode });
   }
 
-  const eventType = evt.type;
+  const { data, type: eventType } = evt;
 
   if (eventType === "user.created") {
-    const { data } = evt;
+    // const { data } = evt;
     await db.insert(users).values({
       clerkId: data.id,
       name: `${data.first_name} ${data.last_name}`,
@@ -58,14 +69,14 @@ export async function POST(req: Request) {
   }
 
   if (eventType === "user.deleted") {
-    const { data } = evt;
+    // const { data } = evt;
     if (!data.id) return new Response("Missing user id", { status: 400 });
 
     await db.delete(users).where(eq(users.clerkId, data.id));
   }
 
   if (eventType === "user.updated") {
-    const { data } = evt;
+    // const { data } = evt;
 
     await db
       .update(users)
@@ -75,5 +86,12 @@ export async function POST(req: Request) {
       })
       .where(eq(users.clerkId, data.id));
   }
-  return new Response("Webhook received", { status: 200 });
+
+  // Log successful webhook
+  await db.insert(serviceLogs).values({
+    service_name: "clerk",
+    request_body: payload,
+    response_body: responseBody,
+  });
+  return new Response(JSON.stringify(responseBody), { status: statusCode });
 }
