@@ -1,4 +1,6 @@
+import { relations } from "drizzle-orm";
 import {
+  integer,
   jsonb,
   pgTable,
   text,
@@ -21,18 +23,51 @@ export const users = pgTable(
   },
   (t) => [uniqueIndex("clerk_id_idx").on(t.clerkId)]
 );
+export const useRelations = relations(users, ({ many }) => ({
+  videos: many(videos),
+}));
 
 export const videoCategories = pgTable(
   "video_categories",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull().unique(),
-    created_at: timestamp("created_at").defaultNow().notNull(),
-    updated_at: timestamp("updated_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   // add index to query using category name
   (t) => [uniqueIndex("name_idx").on(t.name)]
 );
+export const categoryRelations = relations(users, ({ many }) => ({
+  videos: many(videos),
+}));
+
+export const videos = pgTable("videos", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  description: text("description"),
+  likes: integer("likes_count").default(0),
+  dislikes: integer("dislikes_count").default(0),
+  userId: uuid("user_id").references(() => users.id, {
+    onDelete: "cascade",
+  }),
+  categoryId: uuid("category_id").references(() => videoCategories.id, {
+    onDelete: "set null",
+  }),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+export const videoRelations = relations(videos, ({ one }) => ({
+  user: one(users, {
+    fields: [videos.userId],
+    references: [users.id],
+  }),
+  category: one(videoCategories, {
+    fields: [videos.categoryId],
+    references: [videoCategories.id],
+  }),
+}));
 
 export const serviceLogs = pgTable("services_logs", {
   id: uuid("id").primaryKey().defaultRandom(),
