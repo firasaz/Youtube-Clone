@@ -20,7 +20,7 @@ export const StudioNavbar = () => {
         </div>
 
         {/* Auth Button */}
-        <div className="flex flex-shrink-0 items-center gap-4">
+        <div className="flex items-center flex-shrink-0 gap-4">
           <StudioUploadModal />
           <AuthButton />
         </div>

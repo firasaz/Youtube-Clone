@@ -30,8 +30,14 @@ export const studioRouter = createTRPCRouter({
             eq(videos.userId, userId),
             cursor
               ? or(
+                  // query the database starting from the element after
+                  // the last element fetched before using the cursor
                   lt(videos.updatedAt, cursor.updatedAt),
                   and(
+                    // or fetch the element that has the same updatedAt
+                    // as the cursor but also has a larger id, in case
+                    // two videos where created at exactly the same time
+                    // (a very rare case)
                     eq(videos.updatedAt, cursor.updatedAt),
                     lt(videos.id, cursor.id)
                   )
@@ -39,7 +45,9 @@ export const studioRouter = createTRPCRouter({
               : undefined
           )
         )
-        .orderBy(desc(videos.id))
+        // order by both descending "id" and "updatedAt" to
+        // match the filtering inside the "WHERE" clause
+        .orderBy(desc(videos.updatedAt), desc(videos.id))
         // fetch an extra element than the limit to check
         // if this is the end or if there's still data
         .limit(limit + 1);
@@ -49,7 +57,7 @@ export const studioRouter = createTRPCRouter({
       // Remove the extra element if there is more data, otherwise keep it
       const items = hasMore ? data.slice(0, -1) : data;
 
-      // set the next cursor to the last item if there was more data remaining
+      // set the next cursor to the last item
       const lastItem = items[items.length - 1];
       const nextCursor = hasMore
         ? {

@@ -54,6 +54,12 @@ export const videos = pgTable("videos", {
   categoryId: uuid("category_id").references(() => videoCategories.id, {
     onDelete: "set null",
   }),
+  muxStatus: text("mux_status"), // handle status of the video
+  muxUploadId: text("mux_upload_id").unique(), // upload id when an upload request is first initiated
+  muxAssetId: text("mux_asset_id").unique(), // id for when the video is full uploaded
+  muxPlaybackId: text("mux_playback_id").unique(),
+  muxTrackId: text("mux_track_id").unique(),
+  muxTrackStatus: text("mux_track_status").unique(),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
