@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import MuxUploader, {
   MuxUploaderDrop,
   MuxUploaderFileSelect,
+  MuxUploaderProgress,
+  MuxUploaderStatus,
 } from "@mux/mux-uploader-react";
 import { UploadIcon } from "lucide-react";
 
@@ -18,6 +20,7 @@ export const StudioUploader = ({
   return (
     <div>
       <MuxUploader
+        onSuccess={onSuccess}
         endpoint={endpoint}
         id={UPLOADER_ID}
         className="hidden group/uploader"
@@ -40,6 +43,13 @@ export const StudioUploader = ({
           </MuxUploaderFileSelect>
         </div>
         <span slot="separator" className="hidden" />
+        <MuxUploaderStatus muxUploader={UPLOADER_ID} className="text-sm" />
+        <MuxUploaderProgress
+          muxUploader={UPLOADER_ID}
+          className="text-sm"
+          type="percentage"
+        />
+        <MuxUploaderProgress muxUploader={UPLOADER_ID} type="bar" />
       </MuxUploaderDrop>
     </div>
   );

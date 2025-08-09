@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import Link from "next/link";
+import { VideoThumbnail } from "@/modules/videos/ui/components/video-thumbnail";
 
 export const VideosSection = () => (
   <Suspense fallback={<p>Loading ...</p>}>
@@ -64,11 +65,23 @@ const VideosSectionSuspense = () => {
                   id={video.id}
                 >
                   <TableRow className="cursor-pointer">
-                    <TableCell>{video.id}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-4">
+                        <div className="aspect-video shrink-0 w-36 relative">
+                          <VideoThumbnail
+                            imageUrl={video.thumbnailUrl}
+                            previewUrl={video.previewUrl}
+                            duration={video.duration ?? 0}
+                          />
+                        </div>
+                      </div>
+                    </TableCell>
                     <TableCell>{video.title}</TableCell>
                     <TableCell>{video.title}</TableCell>
                     <TableCell>{video.title}</TableCell>
-                    <TableCell>{video.title}</TableCell>
+                    <TableCell>
+                      {`${video.createdAt.toLocaleDateString()} ${video.createdAt.toLocaleTimeString()}`}
+                    </TableCell>
                     <TableCell>{video.title}</TableCell>
                     <TableCell>{video.title}</TableCell>
                   </TableRow>

@@ -54,6 +54,9 @@ export const videos = pgTable("videos", {
   categoryId: uuid("category_id").references(() => videoCategories.id, {
     onDelete: "set null",
   }),
+  thumbnailUrl: text("thumbnail_url"),
+  previewUrl: text("preview_url"),
+  duration: integer("duration"),
   muxStatus: text("mux_status"), // handle status of the video
   muxUploadId: text("mux_upload_id").unique(), // upload id when an upload request is first initiated
   muxAssetId: text("mux_asset_id").unique(), // id for when the video is full uploaded
