@@ -1,5 +1,6 @@
 import {
   VideoAssetCreatedWebhookEvent,
+  VideoAssetDeletedWebhookEvent,
   VideoAssetErroredWebhookEvent,
   VideoAssetReadyWebhookEvent,
   VideoAssetTrackReadyWebhookEvent,
@@ -14,7 +15,8 @@ type WebhookEvent =
   | VideoAssetCreatedWebhookEvent
   | VideoAssetErroredWebhookEvent
   | VideoAssetReadyWebhookEvent
-  | VideoAssetTrackReadyWebhookEvent;
+  | VideoAssetTrackReadyWebhookEvent
+  | VideoAssetDeletedWebhookEvent;
 const SIGNING_SECRET = process.env.MUX_WEBHOOK_SECRET;
 
 export const POST = async (req: Request) => {
@@ -42,6 +44,7 @@ export const POST = async (req: Request) => {
 
   switch (payload.type as WebhookEvent["type"]) {
     case "video.asset.created": {
+      console.log("Asset created!");
       const data = payload.data as VideoAssetCreatedWebhookEvent["data"];
 
       // this shouldn't happen as it means MUX crashed and couldn't send back an id
@@ -59,6 +62,7 @@ export const POST = async (req: Request) => {
       break;
     }
     case "video.asset.ready": {
+      console.log("Asset ready!");
       const data = payload.data as VideoAssetReadyWebhookEvent["data"];
       const playbackId = data.playback_ids?.[0].id;
 
@@ -83,6 +87,50 @@ export const POST = async (req: Request) => {
         .where(eq(videos.muxUploadId, data.upload_id));
 
       break;
+    }
+    case "video.asset.errored": {
+      console.log("Asset errored!");
+      const data = payload.data as VideoAssetErroredWebhookEvent["data"];
+      if (!data.upload_id)
+        return new Response("Missing upload ID", { status: 400 });
+
+      await db
+        .update(videos)
+        .set({
+          muxStatus: data.status,
+        })
+        .where(eq(videos.muxUploadId, data.upload_id));
+
+      break;
+    }
+    case "video.asset.deleted": {
+      console.log("Asset deleted!");
+      const data = payload.data as VideoAssetDeletedWebhookEvent["data"];
+      if (!data.upload_id)
+        return new Response("Missing upload ID", { status: 400 });
+
+      await db.delete(videos).where(eq(videos.muxUploadId, data.upload_id));
+
+      break;
+    }
+    case "video.asset.track.ready": {
+      console.log("Asset track ready");
+      const data = payload.data as VideoAssetTrackReadyWebhookEvent["data"] & {
+        asset_id: string;
+      };
+
+      // Typescript incorrectly says asset_id does not exist
+      const { asset_id: assetId, id: trackId, status: trackStatus } = data;
+
+      if (!assetId) return new Response("Missing asset ID", { status: 400 });
+
+      await db
+        .update(videos)
+        .set({
+          muxTrackId: trackId,
+          muxTrackStatus: trackStatus,
+        })
+        .where(eq(videos.muxAssetId, assetId));
     }
   }
   return new Response("Webhook received", { status: 200 });
