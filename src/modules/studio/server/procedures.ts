@@ -4,8 +4,30 @@ import z from "zod";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
 import { and, desc, eq, lt, or } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 
 export const studioRouter = createTRPCRouter({
+  // route for getting a specific video
+  getOne: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { id } = input; // extract the id from the input
+      const { id: userId } = ctx.user; // extract authenticated user id from context
+
+      const [video] = await db
+        .select()
+        .from(videos)
+        .where(
+          and(
+            eq(videos.id, id), // query the video that matches the id passed in the input
+            eq(videos.userId, userId) // query the video that is owned by the authenticated user
+          )
+        );
+
+      if (!video) throw new TRPCError({ code: "NOT_FOUND" }); // not sure if this should be the response, simply returning an empty list might be better for handling the UI more properly
+      return video;
+    }),
+  // route for getting all videos
   getMany: protectedProcedure
     .input(
       z.object({
@@ -36,7 +58,7 @@ export const studioRouter = createTRPCRouter({
                   and(
                     // or fetch the element that has the same updatedAt
                     // as the cursor but also has a larger id, in case
-                    // two videos where created at exactly the same time
+                    // two videos where created at exactly the same time,
                     // (a very rare case)
                     eq(videos.updatedAt, cursor.updatedAt),
                     lt(videos.id, cursor.id)
