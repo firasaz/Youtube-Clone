@@ -5,6 +5,8 @@ import { db } from "@/db";
 import { videos, videoUpdateSchema } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { UTApi } from "uploadthing/server";
+import { workflow } from "@/lib/workflow";
 
 export const videosRouter = createTRPCRouter({
   create: protectedProcedure.mutation(async ({ ctx }) => {
@@ -102,4 +104,67 @@ export const videosRouter = createTRPCRouter({
 
       return removedVideo;
     }),
+
+  restoreThumbnail: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id: userId } = ctx.user;
+
+      if (!input.id)
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Video ID is required",
+        });
+
+      const [existingVideo] = await db
+        .select()
+        .from(videos)
+        .where(and(eq(videos.id, input.id), eq(videos.userId, userId)));
+      // make sure the video is found in the db and belongs to the authenticated user
+      if (!existingVideo)
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Video not found or you do not have permission to update it",
+        });
+      // clean up "uploadthing" storage if there is a thumbnail already uploaded
+      if (existingVideo.thumbnailKey) {
+        const utapi = new UTApi();
+
+        await utapi.deleteFiles(existingVideo.thumbnailKey); // delete the file from "uploadthing" storage and use restore the default MUX generated thumbnail
+        await db
+          .update(videos)
+          .set({ thumbnailKey: null, thumbnailUrl: null })
+          .where(and(eq(videos.id, input.id), eq(videos.userId, userId)));
+      }
+      // make sure the video has a muxPlaybackId to generate the thumbnail URL
+      if (!existingVideo.muxPlaybackId)
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Video does not have a playback ID",
+        });
+
+      // use the MUX service to generate a thumbnail URL as done already be default
+      const thumbnailUrl = `https://image.mux.com/${existingVideo.muxPlaybackId}/thumbnail.jpg`;
+      const [updatedVideo] = await db
+        .update(videos)
+        .set({
+          thumbnailUrl,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(videos.id, input.id), eq(videos.userId, userId)))
+        .returning();
+
+      return updatedVideo;
+    }),
+
+  generateThumbnail: protectedProcedure.mutation(async ({ ctx }) => {
+    const { id: userId } = ctx.user;
+
+    const { workflowRunId } = await workflow.trigger({
+      url: `${process.env.UPSTASH_WORKFLOW_URL}/api/videos/workflows/title`,
+      body: { userId },
+    });
+
+    return { workflowRunId };
+  }),
 });

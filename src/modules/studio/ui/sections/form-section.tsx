@@ -101,6 +101,27 @@ export const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
     },
   });
 
+  const generateThumbnail = trpc.videos.generateThumbnail.useMutation({
+    onSuccess: () => {
+      toast.success("Background Job Started", {
+        description: "This may take some time",
+      });
+    },
+  });
+  const restoreThumbnail = trpc.videos.restoreThumbnail.useMutation({
+    onSuccess: () => {
+      utils.studio.getMany.invalidate();
+      utils.studio.getOne.invalidate({ id: videoId });
+
+      toast.success("Thumbnail restored successfully!");
+    },
+    onError: (err) => {
+      // the error message can be changed into a generic message
+      // instead of displaying the backend error message as is
+      toast.error(err.message);
+    },
+  });
+
   const form = useForm<z.infer<typeof videoUpdateSchema>>({
     resolver: zodResolver(videoUpdateSchema),
     defaultValues: video,
@@ -242,12 +263,18 @@ export const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
                               Change
                             </DropdownMenuItem>
                             {/* AI-generated */}
-                            <DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => generateThumbnail.mutate()}
+                            >
                               <SparklesIcon className="size-4" />
                               AI-generated
                             </DropdownMenuItem>
                             {/* Restore */}
-                            <DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                restoreThumbnail.mutate({ id: videoId })
+                              }
+                            >
                               <RotateCwIcon className="size-4" />
                               Restore
                             </DropdownMenuItem>
