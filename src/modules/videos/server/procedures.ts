@@ -144,11 +144,19 @@ export const videosRouter = createTRPCRouter({
         });
 
       // use the MUX service to generate a thumbnail URL as done already be default
-      const thumbnailUrl = `https://image.mux.com/${existingVideo.muxPlaybackId}/thumbnail.jpg`;
+      const tempThumbnailUrl = `https://image.mux.com/${existingVideo.muxPlaybackId}/thumbnail.jpg`;
+      const utapi = new UTApi();
+      const { data } = await utapi.uploadFilesFromUrl(tempThumbnailUrl);
+
+      if (!data) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const { key: thumbnailKey, url: thumbnailUrl } = data;
+
       const [updatedVideo] = await db
         .update(videos)
         .set({
           thumbnailUrl,
+          thumbnailKey,
           updatedAt: new Date(),
         })
         .where(and(eq(videos.id, input.id), eq(videos.userId, userId)))
