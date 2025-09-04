@@ -264,7 +264,9 @@ export const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
                             </DropdownMenuItem>
                             {/* AI-generated */}
                             <DropdownMenuItem
-                              onClick={() => generateThumbnail.mutate()}
+                              onClick={() =>
+                                generateThumbnail.mutate({ id: videoId })
+                              }
                             >
                               <SparklesIcon className="size-4" />
                               AI-generated
