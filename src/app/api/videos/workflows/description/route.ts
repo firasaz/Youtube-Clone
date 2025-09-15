@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { videos } from "@/db/schema";
 import { serve } from "@upstash/workflow/nextjs";
 import { and, eq } from "drizzle-orm";
+import { GoogleGenAI } from "@google/genai";
 
 interface InputType {
   userId: string;
@@ -34,9 +35,9 @@ export const { POST } = serve(async (context) => {
     return text;
   });
 
-  // Background job to call local ollama model and generate AI-generated title
+  // Background job to call local ollama model and generate AI-generated description
   const ollamaData = await context.run("call-ollama", async () => {
-    const response = await fetch(`${BASE_URL}/api/ollama`, {
+    const response = await fetch(`${BASE_URL}/api/ollama/description`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -47,19 +48,21 @@ export const { POST } = serve(async (context) => {
       }),
     });
     if (!response.ok)
-      throw new Error(`Failed to call /api/ollama: ${response.statusText}`);
+      throw new Error(
+        `Failed to call /api/ollama/description: ${response.statusText}`
+      );
 
     console.log("'call-ollama' step ran");
     const data = await response.json();
     return data.response;
   });
 
-  // Background job to update the video with the new AI-generated title
-  await context.run("update-title", async () => {
+  // Background job to update the video with the new AI-generated description
+  await context.run("update-description", async () => {
     await db
       .update(videos)
       .set({
-        title: ollamaData || video.title,
+        description: ollamaData || video.description,
       })
       .where(
         and(
@@ -67,6 +70,6 @@ export const { POST } = serve(async (context) => {
           // eq(videos.userId, video.userId)
         )
       );
-    console.log("'update-title' step ran");
+    console.log("'update-description' step ran");
   });
 });
