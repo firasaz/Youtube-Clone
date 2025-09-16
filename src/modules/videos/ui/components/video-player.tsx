@@ -8,7 +8,7 @@ interface VideoPlayerProps {
   playbackId?: string | null;
   thumbnailUrl?: string | null;
   autoPlay?: boolean;
-  onPlay?: () => {};
+  onPlay?: () => void;
 }
 
 export const VideoPlayer = ({

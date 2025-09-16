@@ -6,7 +6,7 @@ import {
 import { and, eq, getTableColumns } from "drizzle-orm";
 import { mux } from "@/lib/mux";
 import { db } from "@/db";
-import { users, videos, videoUpdateSchema } from "@/db/schema";
+import { users, videos, videoUpdateSchema, videoViews } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { UTApi } from "uploadthing/server";
@@ -218,6 +218,7 @@ export const videosRouter = createTRPCRouter({
             // add the user to the full sql query result
             ...getTableColumns(users), // spread the users data
           },
+          viewCount: db.$count(videoViews, eq(videoViews.videoId, videos.id)), // this way we added an extra element called "videoViews", and counted the videoViews table for all records of the videoId
         })
         .from(videos)
         .innerJoin(users, eq(videos.userId, users.id))
