@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { VideoPlayer } from "@/modules/videos/ui/components/video-player";
 import { VideoBanner } from "@/modules/videos/ui/components/video-banner";
+import { VideoTopRow } from "../components/video-top-row";
 
 interface VideoSectionProps {
   videoId: string;
@@ -39,6 +40,7 @@ const VideosSectionSuspense = ({ videoId }: VideoSectionProps) => {
         />
       </div>
       <VideoBanner status={video.muxStatus} />
+      <VideoTopRow video={video} />
     </>
   );
 };
