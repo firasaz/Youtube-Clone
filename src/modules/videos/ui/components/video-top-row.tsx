@@ -38,7 +38,12 @@ export const VideoTopRow = ({ video }: VideoTopRowProps) => {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <VideoOwner user={video.user} videoId={video.id} />
         <div className="flex gap-2 overflow-x-auto">
-          <VideoReactions />
+          <VideoReactions
+            videoId={video.id}
+            likes={video.likeCount}
+            dislikes={video.dislikeCount}
+            viewerReaction={video.viewerReaction}
+          />
           <VideoMenu videoId={video.id} variant="secondary" />
         </div>
       </div>
