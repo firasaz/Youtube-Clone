@@ -3,10 +3,11 @@ import {
   createTRPCRouter,
   protectedProcedure,
 } from "@/trpc/init";
-import { and, eq, getTableColumns, inArray } from "drizzle-orm";
+import { and, eq, getTableColumns, inArray, isNotNull } from "drizzle-orm";
 import { mux } from "@/lib/mux";
 import { db } from "@/db";
 import {
+  subscriptions,
   users,
   videoReactions,
   videos,
@@ -240,13 +241,24 @@ export const videosRouter = createTRPCRouter({
           .from(videoReactions)
           .where(inArray(videoReactions.userId, userId ? [userId] : []))
       );
+      const viewerSubscriptions = db.$with("viewer_subscriptions").as(
+        db
+          .select()
+          .from(subscriptions)
+          .where(inArray(subscriptions.viewerId, userId ? [userId] : []))
+      );
+
       const [existingVideo] = await db
-        .with(viewerReactions)
+        .with(viewerReactions, viewerSubscriptions)
         .select({
           ...getTableColumns(videos), //spread the videos data
           user: {
             // add the user to the full sql query result
             ...getTableColumns(users), // spread the users data
+            subscriberCount: db.$count(subscriptions, eq(subscriptions.creatorId, users.id)),
+            viewerSubscribed: isNotNull(viewerSubscriptions.viewerId).mapWith(
+              Boolean
+            ),
           },
           viewCount: db.$count(videoViews, eq(videoViews.videoId, videos.id)), // this way we added an extra element called "videoViews", and counted the videoViews table for all records of the videoId
           likeCount: db.$count(
@@ -268,6 +280,10 @@ export const videosRouter = createTRPCRouter({
         .from(videos)
         .innerJoin(users, eq(videos.userId, users.id))
         .leftJoin(viewerReactions, eq(viewerReactions.videoId, videos.id))
+        .leftJoin(
+          viewerSubscriptions,
+          eq(viewerSubscriptions.creatorId, users.id)
+        )
         .where(eq(videos.id, input.id))
         .groupBy(videos.id, users.id, viewerReactions.type);
 
