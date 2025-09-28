@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Utube
+This is Utube. It is a Youtube Clone, built entirely with NextJS. It utilizes all the features of SSR, while also getting the benefits of ReactJS in the frontend.
 
-## Getting Started
+## 🛠️ Technology Stack
+- [NextJS](https://nextjs.org/)
+- [ReactJS](https://react.dev/)
+- [TailwindCSS](https://tailwindcss.com/)
+- [NeonDB](https://neon.com/) - PostgreSQL
+- [Drizzle ORM](https://orm.drizzle.team/), for managing DB in code
+- [tRPC](https://trpc.io/docs/), for end-to-end typesafe APIs
 
-First, run the development server:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+## 🚀 Features
+1. Sign Up / Sign In using `OAuth` accounts such as Google OAuth or Github using [`Clerk`](https://clerk.com/) for Authentication managing.
+2. Watch videos uploaded by other creators on the platform without signing in.
+3. Upload videos and manage uploaded videos using Utube Studio.
+4. Generate video title and description using AI by supplying your AI-assistant with the video transcript by default.
+5. Upload a transcript associated with the uploaded video or let the platform generate it and use it in the video automatically. Auto-generated transcript can be downloaded and modified as per needed.
+6. Allow users to filter videos on the platform using the category filter found in the home page.
+
+## 🗂️ Folder Structure
+```
+/src                   - Full project wrapper
+    /app               - Next.js app directory
+    /components        - Reusable React components
+    /trpc              - tRPC routers and API logic
+    /db                - Drizzle ORM setup and migrations
+    /modules           - Includes all the different parts of the project such as UI components & sections, tRPC procedures, & custom hooks related
+/tailwind.config.ts    - TailwindCSS configurations
+```
+# src
+
+* [app/](./src/app)
+  * [(auth)/](./src/app/(auth))
+  * [(home)/](./src/app/(home))
+  * [(studio)/](./src/app/(studio))
+  * [api/](./src/app/api)
+  * [favicon.ico](./src/app/favicon.ico)
+  * [globals.css](./src/app/globals.css)
+  * [layout.tsx](./src/app/layout.tsx)
+* [components/](./src/components)
+  * [ui/](./src/components/ui)
+  * [filter-carousel.tsx](./src/components/filter-carousel.tsx)
+  * [infinite-scroll.tsx](./src/components/infinite-scroll.tsx)
+  * [responsive-modal.tsx](./src/components/responsive-modal.tsx)
+  * [user-avatar.tsx](./src/components/user-avatar.tsx)
+* [db/](./src/db)
+  * [index.ts](./src/db/index.ts)
+  * [schema.ts](./src/db/schema.ts)
+* [hooks/](./src/hooks)
+  * [use-intersection-observer.ts](./src/hooks/use-intersection-observer.ts)
+  * [use-mobile.tsx](./src/hooks/use-mobile.tsx)
+  * [use-toast.ts](./src/hooks/use-toast.ts)
+* [lib/](./src/lib)
+  * [mux.ts](./src/lib/mux.ts)
+  * [ratelimit.ts](./src/lib/ratelimit.ts)
+  * [redis.ts](./src/lib/redis.ts)
+  * [uploadthing.ts](./src/lib/uploadthing.ts)
+  * [utils.ts](./src/lib/utils.ts)
+  * [workflow.ts](./src/lib/workflow.ts)
+* [modules/](./src/modules)
+  * [auth/](./src/modules/auth)
+  * [comments/](./src/modules/comments)
+  * [home/](./src/modules/home)
+  * [studio/](./src/modules/studio)
+  * [subscriptions/](./src/modules/subscriptions)
+  * [users/](./src/modules/users)
+  * [video-reactions/](./src/modules/video-reactions)
+  * [video-views/](./src/modules/video-views)
+  * [videoCategories/](./src/modules/videoCategories)
+  * [videos/](./src/modules/videos)
+* [scripts/](./src/scripts)
+  * [seed-categories.ts](./src/scripts/seed-categories.ts)
+* [trpc/](./src/trpc)
+  * [routers/](./src/trpc/routers)
+  * [client.tsx](./src/trpc/client.tsx)
+  * [init.ts](./src/trpc/init.ts)
+  * [query-client.ts](./src/trpc/query-client.ts)
+  * [server.tsx](./src/trpc/server.tsx)
+* [constants.ts](./src/constants.ts)
+* [middleware.ts](./src/middleware.ts)
+
+
+
+## 📦 Getting Started
+```
+git clone https://github.com/firasaz/Youtube-Clone.git Utube
+cd Utube
+bun install
 bun dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+#### Local URL:
+[http://localhost:3000](http://localhost:3000)
