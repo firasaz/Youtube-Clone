@@ -5,6 +5,7 @@ This is Utube. It is a Youtube Clone, built entirely with NextJS. It utilizes al
 - [NextJS](https://nextjs.org/)
 - [ReactJS](https://react.dev/)
 - [TailwindCSS](https://tailwindcss.com/)
+- [Shadcn/UI](https://ui.shadcn.com/)
 - [NeonDB](https://neon.com/) - PostgreSQL
 - [Drizzle ORM](https://orm.drizzle.team/), for managing DB in code
 - [tRPC](https://trpc.io/docs/), for end-to-end typesafe APIs
