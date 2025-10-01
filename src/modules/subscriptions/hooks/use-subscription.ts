@@ -29,7 +29,16 @@ export const useSubscription = ({
       if (err.data?.code === "UNAUTHORIZED") clerk.openSignIn();
     },
   });
-  const unsubscribe = trpc.subscriptions.remove.useMutation();
+  const unsubscribe = trpc.subscriptions.remove.useMutation({
+    onSuccess: () => {
+      toast.success("Unsubscribed");
+    },
+    onError: (error) => {
+      toast.error("Something went wrong");
+
+      if (error.data?.code === "UNAUTHORIZED") clerk.openSignIn();
+    },
+  });
 
   const isPending = subscribe.isPending || unsubscribe.isPending;
 

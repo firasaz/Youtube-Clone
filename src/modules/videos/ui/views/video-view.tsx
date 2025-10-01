@@ -15,7 +15,7 @@ const VideoView = ({ videoId }: VideoViewProps) => {
           <div className="lg:hidden block mt-4">
             <SuggestionsSection />
           </div>
-          <CommentsSection />
+          <CommentsSection videoId={videoId} />
         </div>
         <div className="hidden lg:block w-1/4 xl:w-1/3">
           <SuggestionsSection />
