@@ -152,7 +152,7 @@ export const POST = async (req: Request) => {
     await db.insert(serviceLogs).values({
       service_name: "MUX",
       request_body: payload,
-      response_body: "Webhook received",
+      response_body: `Webhook received: ${payload.type}`,
     });
     return new Response("Webhook received", { status: 200 });
   } catch (err) {

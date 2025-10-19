@@ -53,6 +53,8 @@ import { ThumbnailUploadModal } from "@/modules/studio/ui/components/thumbnail-u
 import { ThumbnailGenerateModal } from "../components/thumbnail-generate-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { APP_URL } from "@/constants";
+
 interface FormSectionProps {
   videoId: string;
 }
@@ -141,7 +143,7 @@ export const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
       console.log("success");
       toast.success("Video updated successfully!");
     },
-    onError: (err) => {
+    onError: err => {
       // the error message can be changed into a generic message
       // instead of displaying the backend error message as is
       toast.error(err.message);
@@ -156,9 +158,20 @@ export const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
       toast.success("Video deleted successfully!");
       router.push("/studio");
     },
-    onError: (err) => {
+    onError: err => {
       // the error message can be changed into a generic message
       // instead of displaying the backend error message as is
+      toast.error(err.message);
+    },
+  });
+
+  const revalidate = trpc.videos.revalidate.useMutation({
+    onSuccess: () => {
+      utils.studio.getMany.invalidate();
+      utils.studio.getOne.invalidate({ id: videoId });
+      toast.success("Video revalidated!");
+    },
+    onError: err => {
       toast.error(err.message);
     },
   });
@@ -184,7 +197,7 @@ export const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
 
       toast.success("Thumbnail restored successfully!");
     },
-    onError: (err) => {
+    onError: err => {
       // the error message can be changed into a generic message
       // instead of displaying the backend error message as is
       toast.error(err.message);
@@ -209,9 +222,7 @@ export const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
   const [thumbnailGenerateOpen, setThumbnailGenerateOpen] = useState(false);
   const [thumbnailModalOpen, setThumbnailModalOpen] = useState(false);
 
-  const fullUrl = `${
-    process.env.VERCEL_URL || "http://localhost:3000"
-  }/videos/${videoId}`;
+  const fullUrl = `${APP_URL}/videos/${videoId}`;
   const [isCopied, setIsCopied] = useState(false);
 
   const onCopy = async () => {
@@ -261,6 +272,12 @@ export const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => revalidate.mutate({ id: videoId })}
+                  >
+                    <RotateCwIcon className="size-4 mr-2" />
+                    Revalidate
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => remove.mutate({ id: videoId })}
                   >
@@ -425,7 +442,7 @@ export const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {categories.map((category) => (
+                        {categories.map(category => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}
                           </SelectItem>

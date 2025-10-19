@@ -91,7 +91,7 @@ export async function POST(req: Request) {
   await db.insert(serviceLogs).values({
     service_name: "clerk",
     request_body: payload,
-    response_body: responseBody,
+    response_body: `${responseBody.message}: ${eventType}`,
   });
   return new Response(JSON.stringify(responseBody), { status: statusCode });
 }

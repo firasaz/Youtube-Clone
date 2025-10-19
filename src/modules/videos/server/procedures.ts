@@ -7,6 +7,7 @@ import { and, eq, getTableColumns, inArray, isNotNull } from "drizzle-orm";
 import { mux } from "@/lib/mux";
 import { db } from "@/db";
 import {
+  serviceLogs,
   subscriptions,
   users,
   videoReactions,
@@ -106,6 +107,14 @@ export const videosRouter = createTRPCRouter({
           )
         )
         .returning();
+      if (removedVideo.muxAssetId) {
+        const res = await mux.video.assets.delete(removedVideo.muxAssetId);
+        await db.insert(serviceLogs).values({
+          service_name: "MUX",
+          request_body: { asset_id: removedVideo.muxAssetId },
+          response_body: res,
+        });
+      }
 
       if (!removedVideo)
         throw new TRPCError({
@@ -255,7 +264,10 @@ export const videosRouter = createTRPCRouter({
           user: {
             // add the user to the full sql query result
             ...getTableColumns(users), // spread the users data
-            subscriberCount: db.$count(subscriptions, eq(subscriptions.creatorId, users.id)),
+            subscriberCount: db.$count(
+              subscriptions,
+              eq(subscriptions.creatorId, users.id)
+            ),
             viewerSubscribed: isNotNull(viewerSubscriptions.viewerId).mapWith(
               Boolean
             ),
@@ -284,10 +296,62 @@ export const videosRouter = createTRPCRouter({
           viewerSubscriptions,
           eq(viewerSubscriptions.creatorId, users.id)
         )
-        .where(eq(videos.id, input.id))
-        // .groupBy(videos.id, users.id, viewerReactions.type);
+        .where(eq(videos.id, input.id));
+      // .groupBy(videos.id, users.id, viewerReactions.type);
 
       if (!existingVideo) throw new TRPCError({ code: "NOT_FOUND" });
       return existingVideo;
+    }),
+
+  revalidate: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id: userId } = ctx.user;
+
+      const [existingVideo] = await db
+        .select()
+        .from(videos)
+        .where(and(eq(videos.id, input.id), eq(videos.userId, userId)));
+      if (!existingVideo) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // check if we have the necessary fields to validate with MUX
+      if (!existingVideo.muxUploadId)
+        throw new TRPCError({ code: "BAD_REQUEST" });
+
+      const upload = await mux.video.uploads.retrieve(
+        existingVideo.muxUploadId
+      );
+      if (!upload || !upload.asset_id)
+        throw new TRPCError({ code: "BAD_REQUEST" });
+
+      const asset = await mux.video.assets.retrieve(upload.asset_id);
+      if (!asset) throw new TRPCError({ code: "NOT_FOUND" });
+      await db.insert(serviceLogs).values({
+        service_name: "MUX",
+        request_body: { assetId: upload.asset_id },
+        response_body: asset,
+      });
+
+      const playbackId = asset.playback_ids?.[0].id;
+      const duration = asset.duration ? Math.round(asset.duration * 1000) : 0;
+      // find the track that matches the auto generated subtitle by MUX to add it to the video when validating
+      const track = asset.tracks?.find(
+        track => track.text_source === "generated_vod"
+      );
+
+      const [updatedVideo] = await db
+        .update(videos)
+        .set({
+          muxStatus: asset.status,
+          muxPlaybackId: playbackId,
+          muxAssetId: asset.id,
+          muxTrackId: track?.id,
+          muxTrackStatus: track?.status,
+          duration,
+        })
+        .where(and(eq(videos.id, input.id), eq(videos.userId, userId)))
+        .returning();
+
+      return updatedVideo;
     }),
 });
