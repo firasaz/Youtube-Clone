@@ -1,5 +1,5 @@
 import { VideoSection } from "@/modules/videos/ui/sections/video-section";
-import SuggestionsSection from "../sections/suggestions-section";
+import { SuggestionsSection } from "../sections/suggestions-section";
 import CommentsSection from "../sections/comments-section";
 
 interface VideoViewProps {
@@ -13,12 +13,12 @@ const VideoView = ({ videoId }: VideoViewProps) => {
         <div className="flex-1 min-w-0">
           <VideoSection videoId={videoId} />
           <div className="lg:hidden block mt-4">
-            <SuggestionsSection />
+            <SuggestionsSection videoId={videoId} isManual={true} />
           </div>
           <CommentsSection videoId={videoId} />
         </div>
         <div className="hidden lg:block w-1/4 xl:w-1/3">
-          <SuggestionsSection />
+          <SuggestionsSection videoId={videoId} />
         </div>
       </div>
     </div>
