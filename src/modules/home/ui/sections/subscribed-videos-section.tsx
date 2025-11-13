@@ -11,11 +11,7 @@ import {
 } from "@/modules/videos/ui/components/video-grid-card";
 import { InfiniteScroll } from "@/components/infinite-scroll";
 
-interface HomeVideosSectionProps {
-  categoryId?: string;
-}
-
-const HomeVideosSectionSkeleton = () => {
+const SubscribedVideosSectionSkeleton = () => {
   return (
     <div className="gap-4 gap-y-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 [@media(min-width:1920px)]:grid-cols-5">
       {Array.from({ length: 18 }).map((_, index) => (
@@ -24,27 +20,27 @@ const HomeVideosSectionSkeleton = () => {
     </div>
   );
 };
-export const HomeVideosSection = (props: HomeVideosSectionProps) => {
+export const SubscribedVideosSection = () => {
   return (
     // supply the suspense with a key so that it refreshes the suspense everytime we change categories while the API is fetching the new videos
-    <Suspense key={props.categoryId} fallback={<HomeVideosSectionSkeleton />}>
+    <Suspense fallback={<SubscribedVideosSectionSkeleton />}>
       <ErrorBoundary fallback={<p>error...</p>}>
-        <HomeVideosSectionSuspense {...props} />
+        <SubscribedVideosSectionSuspense />
       </ErrorBoundary>
     </Suspense>
   );
 };
 
-const HomeVideosSectionSuspense = ({ categoryId }: HomeVideosSectionProps) => {
-  const [videos, query] = trpc.videos.getMany.useSuspenseInfiniteQuery(
-    {
-      categoryId,
-      limit: DEFAULT_LIMIT,
-    },
-    {
-      getNextPageParam: lastPage => lastPage.nextCursor,
-    }
-  );
+const SubscribedVideosSectionSuspense = () => {
+  const [videos, query] =
+    trpc.videos.getManySubscribed.useSuspenseInfiniteQuery(
+      {
+        limit: DEFAULT_LIMIT,
+      },
+      {
+        getNextPageParam: lastPage => lastPage.nextCursor,
+      }
+    );
   return (
     <>
       <div className="gap-4 gap-y-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 [@media(min-width:1920px)]:grid-cols-5">

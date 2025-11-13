@@ -31,7 +31,7 @@ export const users = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (t) => [uniqueIndex("clerk_id_idx").on(t.clerkId)]
+  t => [uniqueIndex("clerk_id_idx").on(t.clerkId)]
 );
 export const useRelations = relations(users, ({ many }) => ({
   videos: many(videos),
@@ -45,6 +45,7 @@ export const useRelations = relations(users, ({ many }) => ({
   }),
   comments: many(comments),
   commentReactions: many(commentReactions),
+  playlists: many(playlists), // user can have many playlists
 }));
 
 export const videoCategories = pgTable(
@@ -56,7 +57,7 @@ export const videoCategories = pgTable(
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   // add index to query using category name
-  (t) => [uniqueIndex("name_idx").on(t.name)]
+  t => [uniqueIndex("name_idx").on(t.name)]
 );
 export const categoryRelations = relations(users, ({ many }) => ({
   videos: many(videos),
@@ -126,7 +127,7 @@ export const comments = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (t) => {
+  t => {
     return [
       foreignKey({
         columns: [t.parentId],
@@ -172,7 +173,7 @@ export const commentReactions = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (t) => [
+  t => [
     primaryKey({
       name: "comment_reactions_pk",
       columns: [t.userId, t.commentId],
@@ -206,7 +207,7 @@ export const videoViews = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (t) => [
+  t => [
     primaryKey({
       name: "video_views_pk",
       columns: [t.userId, t.videoId],
@@ -242,7 +243,7 @@ export const videoReactions = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (t) => [
+  t => [
     primaryKey({
       name: "video_reactions_pk",
       columns: [t.userId, t.videoId],
@@ -280,7 +281,7 @@ export const subscriptions = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (t) => [
+  t => [
     primaryKey({
       name: "subscriptions_pk",
       columns: [t.viewerId, t.creatorId],
@@ -297,6 +298,56 @@ export const subscriptionRelations = relations(subscriptions, ({ one }) => ({
     fields: [subscriptions.creatorId],
     references: [users.id],
     relationName: "subscriptions_creator_id_fkey",
+  }),
+}));
+
+export const playlists = pgTable("playlists", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  description: text("description"),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+export const playlistRelations = relations(playlists, ({ one, many }) => ({
+  user: one(users, {
+    fields: [playlists.userId],
+    references: [users.id],
+  }),
+  playlistVideos: many(playlistVideos),
+}));
+
+export const playlistVideos = pgTable(
+  "playlist_videos",
+  {
+    playlistId: uuid("playlist_id")
+      .references(() => playlists.id, { onDelete: "cascade" })
+      .notNull(),
+    videoId: uuid("video_id")
+      .references(() => videos.id, { onDelete: "cascade" })
+      .notNull(),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  t => [
+    primaryKey({
+      name: "playlist_videos_pk",
+      columns: [t.playlistId, t.videoId],
+    }),
+  ]
+);
+export const playlistVideoRelations = relations(playlistVideos, ({ one }) => ({
+  playlist: one(playlists, {
+    fields: [playlistVideos.playlistId],
+    references: [playlists.id],
+  }),
+  video: one(videos, {
+    fields: [playlistVideos.videoId],
+    references: [videos.id],
   }),
 }));
 

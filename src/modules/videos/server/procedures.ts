@@ -449,4 +449,193 @@ export const videosRouter = createTRPCRouter({
         nextCursor,
       };
     }),
+
+  getTrending: baseProcedure
+    .input(
+      z.object({
+        cursor: z
+          .object({
+            id: z.string().uuid(),
+            viewCount: z.number(),
+          })
+          .nullish(),
+        limit: z.number().min(1).max(100),
+      })
+    )
+    .query(async ({ input }) => {
+      const { cursor, limit } = input;
+
+      // subquery to get the views count
+      const viewCountSubquery = db.$count(
+        videoViews,
+        eq(videoViews.videoId, videos.id)
+      );
+
+      const data = await db
+        .select({
+          ...getTableColumns(videos),
+          user: users,
+          viewCount: viewCountSubquery,
+          likeCount: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "like")
+            )
+          ),
+          dislikeCount: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "dislike")
+            )
+          ),
+        })
+        .from(videos)
+        .innerJoin(users, eq(videos.userId, users.id))
+        .where(
+          and(
+            eq(videos.visibility, "public"),
+            cursor
+              ? or(
+                  // query the database starting from the element after
+                  // the last element fetched before using the cursor
+                  lt(viewCountSubquery, cursor.viewCount),
+                  and(
+                    // or fetch the element that has the same updatedAt
+                    // as the cursor but also has a larger id, in case
+                    // two videos where created at exactly the same time,
+                    // (a very rare case)
+                    eq(viewCountSubquery, cursor.viewCount),
+                    lt(videos.id, cursor.id)
+                  )
+                )
+              : undefined
+          )
+        )
+        // order by both descending "id" and "updatedAt" to
+        // match the filtering inside the "WHERE" clause
+        .orderBy(desc(viewCountSubquery), desc(videos.id))
+        // fetch an extra element than the limit to check
+        // if this is the end or if there's still data
+        .limit(limit + 1);
+
+      // Check if there is more data
+      const hasMore = data.length > limit;
+      // Remove the extra element if there is more data, otherwise keep it
+      const items = hasMore ? data.slice(0, -1) : data;
+
+      // set the next cursor to the last item
+      const lastItem = items[items.length - 1];
+      const nextCursor = hasMore
+        ? {
+            id: lastItem.id,
+            viewCount: lastItem.viewCount,
+          }
+        : null;
+
+      return {
+        items,
+        nextCursor,
+      };
+    }),
+
+  getManySubscribed: protectedProcedure
+    .input(
+      z.object({
+        cursor: z
+          .object({
+            id: z.string().uuid(),
+            updatedAt: z.date(),
+          })
+          .nullish(),
+        limit: z.number().min(1).max(100),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { id: userId } = ctx.user;
+      const { cursor, limit } = input;
+
+      const viewerSubscriptions = db.$with("viewer_subscriptions").as(
+        db
+          .select({
+            userId: subscriptions.creatorId,
+          })
+          .from(subscriptions)
+          .where(eq(subscriptions.viewerId, userId))
+      );
+
+      const data = await db
+        .with(viewerSubscriptions)
+        .select({
+          ...getTableColumns(videos),
+          user: users,
+          viewCount: db.$count(videoViews, eq(videoViews.videoId, videos.id)),
+          likeCount: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "like")
+            )
+          ),
+          dislikeCount: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "dislike")
+            )
+          ),
+        })
+        .from(videos)
+        .innerJoin(users, eq(videos.userId, users.id))
+        .innerJoin(
+          viewerSubscriptions,
+          eq(viewerSubscriptions.userId, users.id)
+        ) // exclusively include only the videos that the user is subscribed to
+        .where(
+          and(
+            eq(videos.visibility, "public"),
+            cursor
+              ? or(
+                  // query the database starting from the element after
+                  // the last element fetched before using the cursor
+                  lt(videos.updatedAt, cursor.updatedAt),
+                  and(
+                    // or fetch the element that has the same updatedAt
+                    // as the cursor but also has a larger id, in case
+                    // two videos where created at exactly the same time,
+                    // (a very rare case)
+                    eq(videos.updatedAt, cursor.updatedAt),
+                    lt(videos.id, cursor.id)
+                  )
+                )
+              : undefined
+          )
+        )
+        // order by both descending "id" and "updatedAt" to
+        // match the filtering inside the "WHERE" clause
+        .orderBy(desc(videos.updatedAt), desc(videos.id))
+        // fetch an extra element than the limit to check
+        // if this is the end or if there's still data
+        .limit(limit + 1);
+
+      // Check if there is more data
+      const hasMore = data.length > limit;
+      // Remove the extra element if there is more data, otherwise keep it
+      const items = hasMore ? data.slice(0, -1) : data;
+
+      // set the next cursor to the last item
+      const lastItem = items[items.length - 1];
+      const nextCursor = hasMore
+        ? {
+            id: lastItem.id,
+            updatedAt: lastItem.updatedAt,
+          }
+        : null;
+
+      return {
+        items,
+        nextCursor,
+      };
+    }),
 });
