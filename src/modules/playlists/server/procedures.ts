@@ -1,4 +1,5 @@
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
+import { TRPCError } from "@trpc/server";
 import { and, desc, eq, getTableColumns, lt, or } from "drizzle-orm";
 import { z } from "zod";
 
@@ -223,5 +224,8 @@ export const playlistsRouter = createTRPCRouter({
           name,
         })
         .returning();
+
+      if (!createdPlaylist) throw new TRPCError({ code: "BAD_REQUEST" });
+      return createdPlaylist;
     }),
 });
