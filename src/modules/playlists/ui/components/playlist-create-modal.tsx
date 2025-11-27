@@ -37,15 +37,18 @@ export const PlaylistCreateModal = ({
     },
   });
 
+  const utils = trpc.useUtils();
   const createPlaylist = trpc.playlists.create.useMutation({
     onSuccess: () => {
       toast.success("Playlist created");
       form.reset();
       onOpenChange(false);
+      utils.playlists.getMany.invalidate();
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {};
+  const onSubmit = (values: z.infer<typeof formSchema>) =>
+    createPlaylist.mutate(values);
 
   return (
     <ResponsiveModal
@@ -72,7 +75,11 @@ export const PlaylistCreateModal = ({
           />
           <div className="flex justify-end">
             <Button type="submit" disabled={createPlaylist.isPending}>
-              Create
+              {createPlaylist.isPending ? (
+                <Loader2Icon className="animate-spin" />
+              ) : (
+                "Create"
+              )}
             </Button>
           </div>
         </form>
