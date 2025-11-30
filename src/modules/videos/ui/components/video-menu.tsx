@@ -40,6 +40,7 @@ export const VideoMenu = ({
       <PlaylistAddModal
         open={isOpenPlaylistAddModal}
         onOpenChange={setIsOpenPlaylistAddModal}
+        videoId={videoId}
       />
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
