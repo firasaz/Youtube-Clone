@@ -33,7 +33,9 @@ export async function POST(req: Request) {
 - ONLY return the title as plain text. Do not add quotes or any additional formatting.`;
 
   console.log("fetching AI-generated title...");
-  const response = await fetch("http://localhost:11434/api/chat", {
+  const AI_URL = process.env.NGROK_URL || "http://localhost:11434";
+
+  const response = await fetch(`${AI_URL}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
