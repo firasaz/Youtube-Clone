@@ -3,11 +3,11 @@ import { DEFAULT_LIMIT } from "@/constants";
 import { SubscriptionsView } from "@/modules/home/ui/views/subscriptions-view";
 
 export const dynamic = "force-dynamic";
-interface PageProps {
-  searchParams: Promise<{
-    categoryId?: string;
-  }>;
-}
+// interface PageProps {
+//   searchParams: Promise<{
+//     categoryId?: string;
+//   }>;
+// }
 
 async function Page() {
   void trpc.videos.getManySubscribed.prefetchInfinite({

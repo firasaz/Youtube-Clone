@@ -2,13 +2,13 @@ import { db } from "@/db";
 import { videos } from "@/db/schema";
 import { serve } from "@upstash/workflow/nextjs";
 import { and, eq } from "drizzle-orm";
-import { GoogleGenAI } from "@google/genai";
+// import { GoogleGenAI } from "@google/genai";
 
 interface InputType {
   userId: string;
   videoId: string;
 }
-export const { POST } = serve(async (context) => {
+export const { POST } = serve(async context => {
   const BASE_URL = process.env.NGROK_URL;
 
   const input = (await context.requestPayload) as InputType;

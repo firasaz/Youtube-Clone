@@ -37,10 +37,10 @@ export const subscriptionsRouter = createTRPCRouter({
         .where(
           and(
             eq(subscriptions.viewerId, ctx.user.id),
-            eq(subscriptions.creatorId, userId),
+            eq(subscriptions.creatorId, userId)
           )
         )
         .returning();
-      
+      return deletedSubscription;
     }),
 });

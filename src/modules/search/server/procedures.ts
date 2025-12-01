@@ -4,7 +4,7 @@ import z from "zod";
 import { db } from "@/db";
 import { users, videoReactions, videos, videoViews } from "@/db/schema";
 import { and, desc, eq, getTableColumns, ilike, lt, or } from "drizzle-orm";
-import { TRPCError } from "@trpc/server";
+// import { TRPCError } from "@trpc/server";
 
 export const searchRouter = createTRPCRouter({
   // route for getting all videos based on query and category if provided

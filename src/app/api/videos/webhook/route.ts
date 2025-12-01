@@ -22,19 +22,16 @@ type WebhookEvent =
 const SIGNING_SECRET = process.env.MUX_WEBHOOK_SECRET;
 
 export const POST = async (req: Request) => {
-  let payload: any = null; // Will hold the parsed request body
+  let payload = null; // Will hold the parsed request body
 
   try {
-    if (!SIGNING_SECRET) {
-      throw new Error("MUX_WEBHOOK_SECRET is not set");
-    }
+    if (!SIGNING_SECRET) throw new Error("MUX_WEBHOOK_SECRET is not set");
 
     const headersPayload = await headers();
     const muxSignature = headersPayload.get("mux-signature");
 
-    if (!muxSignature) {
+    if (!muxSignature)
       return new Response("No signature found", { status: 401 });
-    }
 
     payload = await req.json();
     const body = JSON.stringify(payload);
