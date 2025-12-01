@@ -92,7 +92,7 @@ const VideosSectionSuspense = () => {
       limit: DEFAULT_LIMIT,
     },
     {
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      getNextPageParam: lastPage => lastPage.nextCursor,
     }
   );
   const handleQueryPaging = async () => {
@@ -119,8 +119,8 @@ const VideosSectionSuspense = () => {
           </TableHeader>
           <TableBody>
             {videos.pages
-              .flatMap((page) => page.items)
-              .map((video) => (
+              .flatMap(page => page.items)
+              .map(video => (
                 <Link
                   href={`/studio/videos/${video.id}`}
                   key={video.id}
@@ -165,9 +165,15 @@ const VideosSectionSuspense = () => {
                       new Date(video.createdAt),
                       "d MMM yyyy"
                     )} ${video.createdAt.toLocaleTimeString()}`}</TableCell>
-                    <TableCell className="text-right">views</TableCell>
-                    <TableCell className="text-right">comments</TableCell>
-                    <TableCell className="text-right pr-6">likes</TableCell>
+                    <TableCell className="text-right">
+                      {video.viewCount}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {video.commentCount}
+                    </TableCell>
+                    <TableCell className="text-right pr-6">
+                      {video.likeCount}
+                    </TableCell>
                   </TableRow>
                 </Link>
               ))}

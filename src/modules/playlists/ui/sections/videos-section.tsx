@@ -14,6 +14,7 @@ import {
   VideoRowCard,
   VideoRowCardSkeleton,
 } from "@/modules/videos/ui/components/video-row-card";
+import { toast } from "sonner";
 
 interface VideosSecitonProps {
   playlistId: string;
@@ -48,6 +49,7 @@ export const VideosSection = ({ playlistId }: VideosSecitonProps) => {
 };
 
 const VideosSectionSuspense = ({ playlistId }: VideosSecitonProps) => {
+  const utils = trpc.useUtils();
   const [videos, query] = trpc.playlists.getCustom.useSuspenseInfiniteQuery(
     {
       playlistId,
@@ -57,20 +59,47 @@ const VideosSectionSuspense = ({ playlistId }: VideosSecitonProps) => {
       getNextPageParam: lastPage => lastPage.nextCursor,
     }
   );
+
+  const removeVideo = trpc.playlists.removeVideo.useMutation({
+    onSuccess: data => {
+      toast.success("video removed from playlist");
+      utils.playlists.getMany.invalidate();
+      utils.playlists.getManyForVideo.invalidate({ videoId: data.videoId });
+      utils.playlists.getOne.invalidate({ id: data.playlistId });
+      utils.playlists.getCustom.invalidate({ playlistId: data.playlistId });
+    },
+    onError: () => {
+      toast.error("Something went wrong");
+    },
+  });
+
   return (
     <>
       <div className="flex flex-col gap-4 gap-y-10 md:hidden">
         {videos.pages
           .flatMap(page => page.items)
           .map(video => (
-            <VideoGridCard key={video.id} data={video} />
+            <VideoGridCard
+              key={video.id}
+              data={video}
+              onRemove={() =>
+                removeVideo.mutate({ videoId: video.id, playlistId })
+              }
+            />
           ))}
       </div>
       <div className="hidden flex-col gap-4 md:flex">
         {videos.pages
           .flatMap(page => page.items)
           .map(video => (
-            <VideoRowCard key={video.id} data={video} size={"compact"} />
+            <VideoRowCard
+              key={video.id}
+              data={video}
+              onRemove={() =>
+                removeVideo.mutate({ videoId: video.id, playlistId })
+              }
+              size={"compact"}
+            />
           ))}
       </div>
       <InfiniteScroll
