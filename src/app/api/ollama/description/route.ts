@@ -32,7 +32,8 @@ export async function POST(req: Request) {
 - Aim for a summary that is 3-5 sentences long and no more than 200 characters.`;
 
   console.log("fetching AI-generated title...");
-  const response = await fetch("http://localhost:11434/api/chat", {
+  const AI_URL = process.env.NGROK_URL || "http://localhost:11434";
+  const response = await fetch(`${AI_URL}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
